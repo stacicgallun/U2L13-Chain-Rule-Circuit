@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Calculus AB: Chain Rule Circuit</title>
+
+<!-- MathJax renders the LaTeX equations used throughout the activity. -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(','\\)']],
+    displayMath: [['\\[','\\]']]
+  },
+  svg: {fontCache: 'global'},
+  startup: {typeset: false}
+};
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/mathlive"></script>
+
+<style>
+  :root{
+    --ink:#202124; --muted:#667085; --panel:#ffffff; --bg:#f5f7fb;
+    --line:#d8dee9; --accent:#5b3cc4; --accent2:#8b5cf6;
+    --good:#18864b; --bad:#c9362b; --gold:#f4b740;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; font-family:Arial, Helvetica, sans-serif; color:var(--ink);
+    background:linear-gradient(180deg,#eef0ff 0,#f7f8fc 270px,#f5f7fb 100%);
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:24px 18px 50px}
+  header{
+    background:var(--panel); border:1px solid var(--line); border-radius:22px;
+    padding:24px; box-shadow:0 8px 30px rgba(33,36,55,.08);
+  }
+  .eyebrow{font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-size:.78rem}
+  h1{margin:5px 0 5px;font-size:clamp(1.7rem,4vw,2.5rem)}
+  .subtitle{margin:0;color:var(--muted);line-height:1.5}
+  .trail-wrap{margin-top:22px}
+  .trail-title{display:flex;justify-content:space-between;gap:12px;align-items:center;font-weight:800}
+  .trail{display:flex;gap:7px;overflow-x:auto;padding:12px 2px 5px;scrollbar-width:thin}
+  .node{
+    min-width:38px;height:38px;border-radius:50%;border:2px solid #cfd4df;
+    display:grid;place-items:center;background:#fff;color:#697386;font-weight:800;
+    position:relative;flex:0 0 auto;
+  }
+  .node.done{background:#e9f8ef;border-color:#53b97b;color:var(--good)}
+  .node.current{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 0 5px #e8e2ff}
+  .node.current::after{content:"YOU ARE HERE";position:absolute;top:43px;white-space:nowrap;font-size:.55rem;color:var(--accent);left:50%;transform:translateX(-50%)}
+  .connector{width:16px;height:2px;background:#d4d8e2;align-self:center;flex:0 0 auto}
+  .statusbar{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .pill{background:#f2f4f8;border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:.9rem}
+  .pill strong{color:var(--accent)}
+  main{margin-top:18px;display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:18px}
+  .card{
+    background:#fff;border:1px solid var(--line);border-radius:20px;
+    box-shadow:0 8px 26px rgba(33,36,55,.06);
+  }
+  .problem{padding:28px}
+  .station{display:inline-flex;align-items:center;gap:8px;background:#eeeaff;color:var(--accent);font-weight:900;border-radius:999px;padding:8px 13px}
+  .problem h2{font-size:1.25rem;margin:20px 0 10px}
+  .directions{color:var(--muted);line-height:1.55}
+  .equation{
+    min-height:150px;display:grid;place-items:center;text-align:center;
+    border:2px dashed #d9d4f8;border-radius:16px;background:#fbfaff;
+    margin:20px 0;padding:24px;font-size:1.35rem;
+  }
+  .workbox{
+    width:100%;min-height:100px;border:1px solid var(--line);border-radius:12px;
+    padding:12px;resize:vertical;font:inherit;background:#fff;
+  }
+  .actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:12px}
+  button{
+    border:0;border-radius:11px;padding:11px 15px;font-weight:800;cursor:pointer;
+    font-size:.95rem;transition:.15s transform,.15s opacity;
+  }
+  button:hover{transform:translateY(-1px)}
+  .primary{background:var(--accent);color:#fff}
+  .secondary{background:#eeeaff;color:var(--accent)}
+  .ghost{background:#f2f4f8;color:#343b49}
+  .feedback{margin-top:16px;border-radius:14px;padding:13px 15px;display:none;line-height:1.45}
+  .feedback.good{display:block;background:#eaf8ef;color:#155c35;border:1px solid #bce6cb}
+  .feedback.bad{display:block;background:#fff0ee;color:#8a241d;border:1px solid #f2c2bd}
+  .answers-panel{padding:20px}
+  .answers-panel h3{margin:0 0 5px}
+  .answers-panel p{margin:0 0 14px;color:var(--muted);font-size:.9rem;line-height:1.45}
+  .answer-grid{display:grid;gap:10px}
+  .answer{
+    background:#fff;border:2px solid #d8dee9;border-radius:13px;padding:12px;
+    text-align:center;min-height:58px;display:grid;place-items:center;cursor:pointer;
+  }
+  .answer:hover{border-color:var(--accent2);background:#faf9ff}
+  .answer.disabled{pointer-events:none;opacity:.55}
+  .answer.correct{border-color:var(--good);background:#edfaf2}
+  .answer.wrong{animation:shake .25s linear}
+  @keyframes shake{25%{transform:translateX(-5px)}50%{transform:translateX(5px)}75%{transform:translateX(-3px)}}
+  .side-section{padding:20px}
+  .side-section + .side-section{border-top:1px solid var(--line)}
+  .side-section h3{margin:0 0 10px}
+  ul{padding-left:20px;line-height:1.6;margin:8px 0}
+  .mini{font-size:.85rem;color:var(--muted)}
+  .finish{display:none;text-align:center;padding:38px}
+  .finish h2{font-size:2rem;color:var(--accent)}
+  .finish .trophy{font-size:4rem}
+  dialog{border:0;border-radius:20px;max-width:720px;width:calc(100% - 28px);padding:0;box-shadow:0 25px 70px rgba(0,0,0,.25)}
+  dialog::backdrop{background:rgba(22,24,35,.55)}
+  .modal{padding:24px}
+  .modal-head{display:flex;justify-content:space-between;align-items:start;gap:15px}
+  .close{background:#f1f3f7;color:#343b49;padding:8px 11px}
+  .practice-card{border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:14px;background:#fbfcff}
+  .practice-answer{display:none;margin-top:10px;color:var(--good);font-weight:800}
+  .practice-answer.show{display:block}
+  .note{background:#fff9e8;border:1px solid #f2d28b;border-radius:13px;padding:12px 14px;margin-top:16px;line-height:1.45}
+
+  .directions-box{margin-top:18px;background:#f8f7ff;border:1px solid #dcd5fb;border-radius:16px;padding:16px 18px}
+  .directions-box h3{margin:0 0 8px;color:var(--accent);font-size:1rem}
+  .directions-box ol{margin:7px 0 0;padding-left:22px;line-height:1.6}
+  .hint-box{display:none;margin-top:14px;background:#fff9e8;border:1px solid #efd28b;border-radius:14px;padding:13px 15px;line-height:1.5}
+  .hint-box.show{display:block}
+  math-field.math-work{display:block;width:100%;min-height:118px;border:2px solid #d8dee9;border-radius:14px;padding:14px;background:#fff;font-size:1.25rem;--selection-background-color:#e8e2ff;--contains-highlight-background-color:#f2efff}
+  math-field.math-work:focus-within{border-color:var(--accent2);box-shadow:0 0 0 3px #eeeaff}
+  .math-work-fallback{display:none;width:100%;min-height:118px;border:2px solid #d8dee9;border-radius:14px;padding:14px;background:#fff;font:1.1rem Arial,sans-serif;resize:vertical}
+  .math-fallback-mode math-field.math-work{display:none}
+  .math-fallback-mode .math-work-fallback{display:block}
+  .workspace-tabs{display:flex;gap:8px;margin:8px 0 0}
+  .workspace-tab{padding:8px 12px;font-size:.86rem;background:#f2f4f8;color:#343b49;border:1px solid var(--line)}
+  .workspace-tab.active{background:#eeeaff;color:var(--accent);border-color:#c9c0f4}
+  .workspace-pane{display:none;margin-top:8px}
+  .workspace-pane.active{display:block}
+  .draw-wrap{border:2px solid #d8dee9;border-radius:14px;background:#fff;overflow:hidden}
+  #drawCanvas{display:block;width:100%;height:260px;touch-action:none;cursor:crosshair;background:#fff}
+  .draw-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:9px 10px;border-top:1px solid var(--line);background:#f8f9fb}
+  .draw-toolbar button{padding:7px 10px;font-size:.82rem}
+  .draw-toolbar label{font-size:.82rem;color:var(--muted);font-weight:700}
+  .draw-toolbar input[type=range]{width:90px}
+  .workspace-note{margin-top:6px;color:var(--muted);font-size:.82rem}
+  .review-bar{display:none;align-items:center;justify-content:space-between;gap:10px;margin:0 0 16px;padding:10px 13px;background:#f2f4f8;border-radius:12px;color:#343b49}
+  .review-bar.show{display:flex}
+  .review-answer{display:none;margin-top:14px;padding:12px 14px;border-radius:12px;background:#eaf8ef;border:1px solid #bce6cb;color:#155c35}
+  .review-answer.show{display:block}
+  .station-review-buttons{display:flex;flex-wrap:wrap;gap:7px}
+  .station-review-buttons button{padding:7px 10px;font-size:.82rem}
+  .node.done{cursor:pointer}
+  .node.done:hover{box-shadow:0 0 0 3px #d8f0e1}
+  .current-review{background:#fff7df!important;border-color:#e8bd58!important;color:#8a6411!important;box-shadow:0 0 0 3px #fff0c5!important}
+  @media(max-width:850px){
+    main{grid-template-columns:1fr}
+    .answers-panel{order:2}
+    .problem{padding:20px}
+  }
+</style>
+</head>
+
+<body>
+<div class="wrap">
+<header>
+  <div class="eyebrow">AP Calculus AB • Interactive Practice</div>
+  <h1>🧭 Chain Rule Circuit</h1>
+  <p class="subtitle">Solve the derivative at your station. Then hunt for the answer that matches your work. Choose that answer to travel to the next station.</p>
+
+  <div class="directions-box">
+    <h3>📋 Directions</h3>
+    <ol>
+      <li>Start at <strong>Station #1</strong> and solve the derivative. Show your work in the math workspace or on paper.</li>
+      <li>Use the <strong>answer bank</strong> to find the expression that matches your derivative.</li>
+      <li>Click the matching answer to move to the next station. A correct answer earns 🎉 confetti!</li>
+      <li>Need help? Use <strong>Hint</strong> for a clue, or choose <strong>Extra Practice</strong> for similar problems.</li>
+      <li>You can click any <strong>completed station</strong> on the trail to review it. Use <strong>Return to Current Station</strong> when you are ready to continue.</li>
+    </ol>
+  </div>
+
+  <div class="trail-wrap">
+    <div class="trail-title">
+      <span>Scavenger Hunt Trail</span>
+      <span id="progressText">Station 1 of 18</span>
+    </div>
+    <div class="trail" id="trail"></div>
+    <div id="reviewButtons" class="station-review-buttons" style="margin-top:8px"></div>
+  </div>
+
+  <div class="statusbar">
+    <div class="pill">Completed: <strong id="completedCount">0</strong>/18</div>
+    <div class="pill">Correct on first try: <strong id="firstTryCount">0</strong></div>
+    <div class="pill">Extra practice: <strong id="practiceCount">0</strong></div>
+  </div>
+</header>
+
+<main>
+  <section class="card problem" id="problemCard">
+    <div class="review-bar" id="reviewBar">
+      <span>🔍 <strong>Review Mode:</strong> You are reviewing a completed station. This will not change your place in the circuit.</span>
+      <button class="secondary" id="returnCurrent">Return to Current Station</button>
+    </div>
+    <div class="station">📍 Station <span id="stationNumber">1</span></div>
+    <h2 id="problemTitle">Find the derivative.</h2>
+    <div class="directions" id="stationDirections">Show your work in the workspace below. When you have your answer, find the matching answer card on the right.</div>
+    <div class="equation" id="problemEquation"></div>
+    <label><strong>Workspace</strong></label>
+    <div class="workspace-tabs" role="tablist" aria-label="Workspace type">
+      <button type="button" class="workspace-tab active" id="typeTab" role="tab" aria-selected="true">⌨️ Type Math</button>
+      <button type="button" class="workspace-tab" id="drawTab" role="tab" aria-selected="false">✏️ Draw</button>
+    </div>
+    <div class="workspace-pane active" id="typePane">
+      <math-field id="mathWork" class="math-work" math-virtual-keyboard-policy="onfocus" smart-mode="true" letter-shape-style="tex" aria-label="Math workspace"></math-field>
+      <textarea id="mathWorkFallback" class="math-work-fallback" aria-label="Math workspace fallback" placeholder="Type your derivative work here. Example: 5x(x^2+1)^4"></textarea>
+      <div class="workspace-note" id="mathNote">Type equations with your keyboard or use the math keyboard that appears when you click in the box. <span id="saveStatus" style="font-weight:700"></span></div>
+    </div>
+    <div class="workspace-pane" id="drawPane">
+      <div class="draw-wrap">
+        <canvas id="drawCanvas" aria-label="Drawing workspace"></canvas>
+        <div class="draw-toolbar">
+          <button type="button" class="ghost" id="undoDraw">↶ Undo</button>
+          <button type="button" class="ghost" id="clearDraw">Clear drawing</button>
+          <label for="penSize">Pen</label>
+          <input id="penSize" type="range" min="1" max="10" value="3">
+        </div>
+      </div>
+      <div class="workspace-note">Draw your derivative work freehand with a mouse, stylus, or touchscreen.</div>
+    </div>
+    <div class="actions">
+      <button class="secondary" id="hintBtn">💡 Hint</button>
+      <button class="secondary" id="extraBtn">✨ Extra practice</button>
+      <button class="ghost" id="clearWork">Clear workspace</button>
+    </div>
+    <div id="hintBox" class="hint-box"></div>
+    <div id="reviewAnswer" class="review-answer"></div>
+    <div id="feedback" class="feedback"></div>
+  </section>
+
+  <aside class="card answers-panel">
+    <h3>🔎 Find Your Answer</h3>
+    <p>These are the answer cells from the circuit. Pick the expression that matches your derivative.</p>
+    <div class="answer-grid" id="answerGrid"></div>
+  </aside>
+</main>
+
+<section class="card finish" id="finishCard">
+  <div class="trophy">🏆</div>
+  <h2>Circuit Complete!</h2>
+  <p>You made it all the way around the Chain Rule Circuit.</p>
+  <p><strong id="finishStats"></strong></p>
+  <div class="actions" style="justify-content:center">
+    <button class="primary" id="restartBtn">Start Again</button>
+    <button class="secondary" id="bonusBtn">Try the Bonus Stations</button>
+  </div>
+  <div class="note" style="text-align:left">
+    <strong>Teacher note:</strong> The original PDF contains two additional problem cells that form a separate branch rather than the main 18-station loop. They are included as bonus stations so the original problems are not lost.
+  </div>
+</section>
+
+</div>
+
+<dialog id="practiceDialog">
+  <div class="modal">
+    <div class="modal-head">
+      <div>
+        <div class="eyebrow">Skill Builder</div>
+        <h2 id="practiceTitle" style="margin:4px 0">Extra Practice</h2>
+      </div>
+      <button class="close" id="closePractice">✕</button>
+    </div>
+    <p class="mini">Try these before returning to the circuit. The problems target the same derivative skill as your current station.</p>
+    <div id="practiceList"></div>
+  </div>
+</dialog>
+
+<script>
+/* Main 18-station loop reconstructed from the answer-to-next-cell structure
+   in the supplied circuit. Every displayed equation is LaTeX. */
+const stations = {
+  1:  {id:"A", problem:String.raw`f(x)=\left(x^2+7\right)^5`, answer:String.raw`10x\left(x^2+7\right)^4`, next:2, skill:"Power + chain rule"},
+  2:  {id:"F", problem:String.raw`f(x)=5\sqrt{x^2+7}`, answer:String.raw`\dfrac{5x}{\sqrt{x^2+7}}`, next:3, skill:"Radical + chain rule"},
+  3:  {id:"J", problem:String.raw`g(x)=\sin\left(x^2+7\right)`, answer:String.raw`2x\cos\left(x^2+7\right)`, next:4, skill:"Trig + chain rule"},
+  4:  {id:"E", problem:String.raw`f(x)=\left(x^2+7\right)^{\frac32}`, answer:String.raw`3x\sqrt{x^2+7}`, next:5, skill:"Fractional exponent + chain rule"},
+  5:  {id:"K", problem:String.raw`y=\sin^2\left(x^2\right)`, answer:String.raw`4x\sin\left(x^2\right)\cos\left(x^2\right)`, next:6, skill:"Trig power + chain rule"},
+  6:  {id:"I", problem:String.raw`g(x)=2x\sqrt{x^2+7}`, answer:String.raw`\dfrac{4x^2+14}{\sqrt{x^2+7}}`, next:7, skill:"Product rule + chain rule"},
+  7:  {id:"T", problem:String.raw`y=\dfrac{\cos x}{\sin^2x}`, answer:String.raw`-\dfrac{2\cos^2x+\sin^2x}{\sin^3x}`, next:8, skill:"Quotient rule + trig"},
+  8:  {id:"N", problem:String.raw`h(x)=\sec\left(x^2+7\right)`, answer:String.raw`2x\sec\left(x^2+7\right)\tan\left(x^2+7\right)`, next:9, skill:"Secant + chain rule"},
+  9:  {id:"H", problem:String.raw`f(x)=\sqrt[3]{x^2+7}`, answer:String.raw`\dfrac{2x}{3\left(x^2+7\right)^{2/3}}`, next:10, skill:"Cube root + chain rule"},
+  10: {id:"L", problem:String.raw`g(t)=\left(t^3-2\right)^7`, answer:String.raw`21`, next:11, skill:"Chain rule at a point"},
+  11: {id:"S", problem:String.raw`g(x)=3x^2-6x,\quad h(x)=\sqrt{x},\quad f(x)=h(g(x))`, answer:String.raw`-2`, next:12, skill:"Composite functions at a point"},
+  12: {id:"D", problem:String.raw`f(x)=\csc\left(\dfrac{x}{3}\right),\quad \text{find }f'(\pi)`, answer:String.raw`-\dfrac29`, next:13, skill:"Cosecant + chain rule at a point"},
+  13: {id:"R", problem:String.raw`g(x)=\dfrac{1}{\sqrt{\tan(3x^2)}}`, answer:String.raw`-\dfrac{3x\sec^2(3x^2)}{\left(\tan(3x^2)\right)^{3/2}}`, next:14, skill:"Nested trig + powers"},
+  14: {id:"G", problem:String.raw`g(\theta)=\cos(3\theta+\pi),\quad \text{find }g'\left(\dfrac\pi4\right)`, answer:String.raw`\dfrac{3\sqrt2}{2}`, next:15, skill:"Trig chain rule at a point"},
+  15: {id:"Q", problem:String.raw`r(t)=\dfrac{3}{\left(t^2-2t\right)^2},\quad \text{find }r'(-1)`, answer:String.raw`\dfrac89`, next:16, skill:"Negative powers + chain rule at a point"},
+  16: {id:"B", problem:String.raw`f(x)=\sin(x^2)`, answer:String.raw`2x\cos(x^2)`, next:17, skill:"Basic chain rule"},
+  17: {id:"M", problem:String.raw`y=\dfrac{\sqrt{3t-2}}{t},\quad \text{for what value of }t\text{ does }y\text{ have a horizontal tangent?}`, answer:String.raw`2`, next:18, skill:"Derivative + horizontal tangent"},
+  18: {id:"O", problem:String.raw`h(x)=f(g(x)),\quad
+\begin{array}{c|ccccc}
+x&f(x)&f'(x)&g(x)&g'(x)\\ \hline
+-1&2&-\frac43&5&0\\
+2&\frac12&5&-1&3\\
+5&0&1.2&\pi&10
+\end{array}
+\quad \text{find }h'(2)`, answer:String.raw`-4`, next:1, skill:"Chain rule with a table"}
+};
+
+/* Two additional problem cells present in the source PDF but not part of the main loop. */
+const bonusStations = [
+  {
+    title:"Bonus A • Tangent-function chain rule",
+    problem:String.raw`f(x)=\tan^2(3x^2)`,
+    answer:String.raw`12x\tan(3x^2)\sec^2(3x^2)`,
+    skill:"Tangent + chain rule"
+  },
+  {
+    title:"Bonus B • Product rule with a table",
+    problem:String.raw`p(x)=f(x)\,g(f(x)),\quad
+\begin{array}{c|cccc}
+x&f(x)&f'(x)&g(x)&g'(x)\\ \hline
+2&\frac13&\pi&-4&6\\
+5&2&\frac14&0&-6
+\end{array}
+\quad \text{find }p'(5)`,
+    answer:String.raw`2`,
+    skill:"Product + chain rule with a table"
+  }
+];
+
+const practice = {
+  "Power + chain rule":[
+    [String.raw`y=\left(3x^2+1\right)^4`,String.raw`24x\left(3x^2+1\right)^3`],
+    [String.raw`f(x)=\left(2x^3-5\right)^3`,String.raw`18x^2\left(2x^3-5\right)^2`]
+  ],
+  "Radical + chain rule":[
+    [String.raw`y=4\sqrt{x^2+9}`,String.raw`\dfrac{4x}{\sqrt{x^2+9}}`],
+    [String.raw`f(x)=\sqrt{5x^2+1}`,String.raw`\dfrac{5x}{\sqrt{5x^2+1}}`]
+  ],
+  "Trig + chain rule":[
+    [String.raw`y=\sin(4x^2-1)`,String.raw`8x\cos(4x^2-1)`],
+    [String.raw`f(x)=\cos(3x^2+2)`,String.raw`-6x\sin(3x^2+2)`]
+  ],
+  "Fractional exponent + chain rule":[
+    [String.raw`y=(x^2+4)^{5/2}`,String.raw`5x\left(x^2+4\right)^{3/2}`],
+    [String.raw`f(x)=(3x+2)^{4/3}`,String.raw`4(3x+2)^{1/3}`]
+  ],
+  "Trig power + chain rule":[
+    [String.raw`y=\cos^2(x^3)`,String.raw`-6x^2\cos(x^3)\sin(x^3)`],
+    [String.raw`y=\sin^3(2x)`,String.raw`6\sin^2(2x)\cos(2x)`]
+  ],
+  "Product rule + chain rule":[
+    [String.raw`y=x\sqrt{x^2+4}`,String.raw`\dfrac{2x^2+4}{\sqrt{x^2+4}}`],
+    [String.raw`y=3x\sin(x^2)`,String.raw`3\sin(x^2)+6x^2\cos(x^2)`]
+  ],
+  "Quotient rule + trig":[
+    [String.raw`y=\dfrac{\sin x}{\cos^2x}`,String.raw`\dfrac{1+\sin^2x}{\cos^3x}`],
+    [String.raw`y=\dfrac{\cos x}{\sin x}`,String.raw`-\csc^2x`]
+  ],
+  "Secant + chain rule":[
+    [String.raw`f(x)=\sec(3x^2)`,String.raw`6x\sec(3x^2)\tan(3x^2)`],
+    [String.raw`f(x)=\sec(5x-1)`,String.raw`5\sec(5x-1)\tan(5x-1)`]
+  ],
+  "Cube root + chain rule":[
+    [String.raw`y=\sqrt[3]{2x+1}`,String.raw`\dfrac{2}{3(2x+1)^{2/3}}`],
+    [String.raw`f(x)=\sqrt[3]{x^2+4}`,String.raw`\dfrac{2x}{3(x^2+4)^{2/3}}`]
+  ],
+  "Chain rule at a point":[
+    [String.raw`g(t)=(t^2+1)^5,\quad \text{find }g'(1)`,String.raw`20`],
+    [String.raw`f(x)=(2x-3)^4,\quad \text{find }f'(2)`,String.raw`32`]
+  ],
+  "Composite functions at a point":[
+    [String.raw`g(x)=x^2+2,\ h(x)=\sqrt{x},\ f(x)=h(g(x)),\quad f'(2)`,String.raw`\dfrac23`],
+    [String.raw`g(x)=2x+5,\ h(x)=x^3,\ f(x)=h(g(x)),\quad f'(1)`,String.raw`192`]
+  ],
+  "Cosecant + chain rule at a point":[
+    [String.raw`f(x)=\csc(x/2),\quad f'(\pi)`,String.raw`-1`],
+    [String.raw`g(x)=\csc(2x),\quad g'(\pi/6)`,String.raw`-\dfrac43`]
+  ],
+  "Nested trig + powers":[
+    [String.raw`y=\dfrac1{\sqrt{\tan(2x^2)}}`,String.raw`-\dfrac{2x\sec^2(2x^2)}{(\tan(2x^2))^{3/2}}`],
+    [String.raw`f(x)=(\tan(3x))^{-2}`,String.raw`-6\sec^2(3x)(\tan(3x))^{-3}`]
+  ],
+  "Trig chain rule at a point":[
+    [String.raw`g(x)=\sin(4x-\pi),\quad g'(\pi/4)`,String.raw`0`],
+    [String.raw`f(x)=\cos(2x+\pi),\quad f'(\pi/2)`,String.raw`2`]
+  ],
+  "Negative powers + chain rule at a point":[
+    [String.raw`r(x)=\dfrac{2}{(x^2+x)^2},\quad r'(1)`,String.raw`-\dfrac12`],
+    [String.raw`f(x)=3(2x-1)^{-3},\quad f'(1)`,String.raw`-18`]
+  ],
+  "Basic chain rule":[
+    [String.raw`y=\cos(5x^2)`,String.raw`-10x\sin(5x^2)`],
+    [String.raw`f(x)=e^{x^2+1}`,String.raw`2xe^{x^2+1}`]
+  ],
+  "Derivative + horizontal tangent":[
+    [String.raw`y=\dfrac{\sqrt{2t+3}}{t}`,String.raw`\dfrac{-t-3}{t^2\sqrt{2t+3}}`],
+    [String.raw`y=\dfrac{\sqrt{t+1}}t`,String.raw`\text{horizontal tangent at }t=2`]
+  ],
+  "Chain rule with a table":[
+    [String.raw`h(x)=f(g(x)),\quad f(3)=5,\ f'(3)=2,\ g(4)=3,\ g'(4)=-1`,String.raw`-2`],
+    [String.raw`h(x)=f(g(x)),\quad f(-2)=7,\ f'(-2)=4,\ g(1)=-2,\ g'(1)=3`,String.raw`12`]
+  ],
+  "Tangent + chain rule":[
+    [String.raw`f(x)=\tan^2(2x)`,String.raw`4\tan(2x)\sec^2(2x)`],
+    [String.raw`y=\tan^3(x^2)`,String.raw`6x\tan^2(x^2)\sec^2(x^2)`]
+  ],
+  "Product + chain rule with a table":[
+    [String.raw`p(x)=f(x)g(f(x)),\quad f(2)=3,\ f'(2)=2,\ g(3)=4,\ g'(3)=5`,String.raw`46`],
+    [String.raw`p(x)=f(x)g(f(x)),\quad f(1)=2,\ f'(1)=3,\ g(2)=1,\ g'(2)=4`,String.raw`18`]
+  ]
+};
+
+
+const hints = {
+  1:"Identify the outer power and the inner function x² + 7. Differentiate the outside first, then multiply by the derivative of the inside.",
+  2:"Rewrite the square root as a 1/2 power. Then use the power rule and multiply by the derivative of x² + 7.",
+  3:"The outside function is sine. Keep the inside x² + 7 and multiply by its derivative.",
+  4:"Treat (x² + 7) as the inside function and use the power rule with exponent 3/2.",
+  5:"Think of sin²(u) as [sin(u)]². You will need the power rule and then the derivative of sin(x²).",
+  6:"This is a product. Use the product rule, and remember that the square root factor also needs the chain rule.",
+  7:"Consider rewriting the denominator as a negative power, or use the quotient rule. Be careful with the derivative of sin²x.",
+  8:"The derivative of sec(u) is sec(u)tan(u). Then multiply by the derivative of u = x² + 7.",
+  9:"Rewrite the cube root as a power of 1/3, then apply the power rule and the chain rule.",
+  10:"Use the chain rule. After differentiating, substitute the given point before simplifying.",
+  11:"Use the chain rule for f(x)=h(g(x)): f′(x)=h′(g(x))g′(x). You will need to evaluate the inner function first.",
+  12:"The derivative of csc(u) is −csc(u)cot(u). The inside is x/3, so do not forget its derivative.",
+  13:"Rewrite the reciprocal square root as [tan(3x²)]^(−1/2). There are multiple layers, so work from the outside inward.",
+  14:"Differentiate cos(u), multiply by u′, then substitute θ = π/4. Use the exact trig value at the resulting angle.",
+  15:"Rewrite the denominator using a negative exponent. Differentiate the outer power, then substitute t = −1.",
+  16:"The outside function is sine and the inside is x². Apply the chain rule directly.",
+  17:"A horizontal tangent occurs where y′ = 0. Use the quotient rule or rewrite the expression first, then solve for t.",
+  18:"Use h′(x)=f′(g(x))g′(x). At x=2, find g(2) first, then use the matching row in the table."
+};
+
+let current=1, completed=new Set(), firstTry=new Set(), tries=0, practiceCount=0, reviewing=null;
+
+function renderMath(el){
+  if(window.MathJax && MathJax.typesetPromise){
+    MathJax.typesetClear([el]);
+    MathJax.typesetPromise([el]).catch(err => console.warn("MathJax rendering:", err));
+  }
+}
+
+function setMath(el, expr, display=true){
+  el.textContent = display ? `\\[${expr}\\]` : `\\(${expr}\\)`;
+}
+
+function buildTrail(){
+  const trail=document.getElementById("trail");
+  trail.innerHTML="";
+  for(let i=1;i<=18;i++){
+    const n=document.createElement("button");
+    n.className="node "+(completed.has(i)?"done ":"")+(i===current&&!reviewing?"current":"")+(i===reviewing?"current-review":"");
+    n.textContent=completed.has(i)?"✓":i;
+    n.title=completed.has(i)?`Review Station ${i}`:(i===current?`Current Station ${i}`:`Station ${i}`);
+    n.disabled=!completed.has(i);
+    if(completed.has(i)) n.addEventListener("click",()=>openReview(i));
+    trail.appendChild(n);
+    if(i<18){const c=document.createElement("div");c.className="connector";trail.appendChild(c)}
+  }
+  document.getElementById("progressText").textContent=reviewing ? `Reviewing Station ${reviewing} • Current: ${current}` : `Station ${current} of 18`;
+  document.getElementById("completedCount").textContent=completed.size;
+  document.getElementById("firstTryCount").textContent=firstTry.size;
+  document.getElementById("practiceCount").textContent=practiceCount;
+
+  const rb=document.getElementById("reviewButtons");
+  rb.innerHTML="";
+  if(completed.size){
+    const label=document.createElement("span"); label.className="mini"; label.textContent="Review completed: "; rb.appendChild(label);
+    [...completed].sort((a,b)=>a-b).forEach(i=>{
+      const b=document.createElement("button"); b.className="ghost"; b.textContent=`#${i}`; b.addEventListener("click",()=>openReview(i)); rb.appendChild(b);
+    });
+  }
+}
+
+function openReview(n){
+  if(!completed.has(n)) return;
+  reviewing=n;
+  showStation(n,true);
+}
+
+// --- Workspace: typed math + freehand drawing ---
+const workspaceByStation = {};
+const SAVE_KEY = "apCalcChainRuleCircuit_v1";
+let saveTimer = null;
+
+function updateSaveStatus(message="✓ Saved") {
+  const el=document.getElementById("saveStatus");
+  if(!el) return;
+  el.textContent=message;
+  clearTimeout(el._timer);
+  el._timer=setTimeout(()=>{ el.textContent=""; },1800);
+}
+
+function serializeState(){
+  const work={};
+  Object.keys(workspaceByStation).forEach(k=>{
+    work[k]={
+      typed: workspaceByStation[k].typed || "",
+      drawn: workspaceByStation[k].drawn || null
+    };
+  });
+  return {
+    version:1,
+    current,
+    completed:[...completed],
+    firstTry:[...firstTry],
+    practiceCount,
+    work
+  };
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(SAVE_KEY, JSON.stringify(serializeState()));
+    updateSaveStatus();
+  }catch(err){
+    console.warn("Could not save circuit progress:",err);
+    updateSaveStatus("⚠ Save unavailable");
+  }
+}
+
+function scheduleSave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(saveState,250);
+}
+
+function loadSavedState(){
+  try{
+    const raw=localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const data=JSON.parse(raw);
+    if(!data || data.version!==1) return false;
+    current=Math.min(18,Math.max(1,Number(data.current)||1));
+    completed=new Set((data.completed||[]).filter(n=>Number.isInteger(n)&&n>=1&&n<=18));
+    firstTry=new Set((data.firstTry||[]).filter(n=>Number.isInteger(n)&&n>=1&&n<=18));
+    practiceCount=Number(data.practiceCount)||0;
+    Object.keys(workspaceByStation).forEach(k=>delete workspaceByStation[k]);
+    Object.entries(data.work||{}).forEach(([k,v])=>{
+      workspaceByStation[k]={typed:v?.typed||"",drawn:v?.drawn||null};
+    });
+    return true;
+  }catch(err){
+    console.warn("Could not load saved circuit progress:",err);
+    return false;
+  }
+}
+
+function clearSavedState(){
+  try{ localStorage.removeItem(SAVE_KEY); }catch(err){}
+}
+const mathWork = document.getElementById("mathWork");
+const mathFallback = document.getElementById("mathWorkFallback");
+function mathEditorReady(){ return !!(window.customElements && customElements.get("math-field") && mathWork); }
+function activateMathFallback(){
+  document.getElementById("typePane").classList.add("math-fallback-mode");
+  document.getElementById("mathNote").textContent="Math entry is unavailable in this browser/file mode, so you can still type your work here.";
+}
+if(window.customElements){
+  customElements.whenDefined("math-field").then(()=>{
+    mathWork.setAttribute("math-virtual-keyboard-policy","onfocus");
+  }).catch(activateMathFallback);
+  setTimeout(()=>{ if(!mathEditorReady()) activateMathFallback(); },2500);
+} else { activateMathFallback(); }
+const canvas = document.getElementById("drawCanvas");
+const ctx = canvas.getContext("2d");
+let drawing = false;
+let drawHistory = [];
+
+function resizeCanvas(preserve=true){
+  const old = preserve && canvas.width && canvas.height ? canvas.toDataURL() : null;
+  const rect = canvas.getBoundingClientRect();
+  const dpr = Math.max(1, window.devicePixelRatio || 1);
+  canvas.width = Math.round(rect.width * dpr);
+  canvas.height = Math.round(rect.height * dpr);
+  ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.lineCap = "round"; ctx.lineJoin = "round";
+  if(old){ const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,rect.width,rect.height); img.src=old; }
+}
+function canvasPoint(e){
+  const r=canvas.getBoundingClientRect();
+  return {x:e.clientX-r.left,y:e.clientY-r.top};
+}
+function saveDrawSnapshot(){ drawHistory.push(canvas.toDataURL()); if(drawHistory.length>30) drawHistory.shift(); }
+function restoreSnapshot(data){
+  ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+  if(!data) return;
+  const img=new Image(); img.onload=()=>ctx.drawImage(img,0,0,canvas.clientWidth,canvas.clientHeight); img.src=data;
+}
+canvas.addEventListener("pointerdown",e=>{
+  e.preventDefault(); saveDrawSnapshot(); drawing=true; canvas.setPointerCapture(e.pointerId);
+  const p=canvasPoint(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.strokeStyle="#202124"; ctx.lineWidth=+document.getElementById("penSize").value;
+  ctx.lineTo(p.x+.01,p.y+.01); ctx.stroke();
+});
+canvas.addEventListener("pointermove",e=>{
+  if(!drawing) return; e.preventDefault(); const p=canvasPoint(e); ctx.lineTo(p.x,p.y); ctx.stroke();
+});
+canvas.addEventListener("pointerup",()=>{drawing=false;ctx.closePath();saveCurrentWorkspaceSoon();});
+canvas.addEventListener("pointercancel",()=>{drawing=false;ctx.closePath();saveCurrentWorkspaceSoon();});
+document.getElementById("undoDraw").addEventListener("click",()=>{
+  if(drawHistory.length){ restoreSnapshot(drawHistory.pop()); saveCurrentWorkspaceSoon(); }
+});
+document.getElementById("clearDraw").addEventListener("click",()=>{
+  saveDrawSnapshot(); ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight); saveCurrentWorkspaceSoon();
+});
+function saveCurrentWorkspaceSoon(){
+  if(!current || reviewing) return;
+  saveWorkspace(current);
+  scheduleSave();
+}
+mathWork.addEventListener("input",saveCurrentWorkspaceSoon);
+mathFallback.addEventListener("input",saveCurrentWorkspaceSoon);
+document.getElementById("typeTab").addEventListener("click",()=>setWorkspaceMode("type"));
+document.getElementById("drawTab").addEventListener("click",()=>setWorkspaceMode("draw"));
+function setWorkspaceMode(mode){
+  const type=mode==="type";
+  document.getElementById("typeTab").classList.toggle("active",type);
+  document.getElementById("drawTab").classList.toggle("active",!type);
+  document.getElementById("typeTab").setAttribute("aria-selected",type);
+  document.getElementById("drawTab").setAttribute("aria-selected",!type);
+  document.getElementById("typePane").classList.toggle("active",type);
+  document.getElementById("drawPane").classList.toggle("active",!type);
+  if(!type) requestAnimationFrame(()=>resizeCanvas(true));
+}
+function saveWorkspace(n){
+  workspaceByStation[n]={typed:(mathEditorReady()?mathWork.value:mathFallback.value)||"", drawn:canvas.toDataURL()};
+}
+function loadWorkspace(n){
+  const w=workspaceByStation[n]||{typed:"",drawn:null};
+  if(mathEditorReady()){ mathWork.value=w.typed; }
+  mathFallback.value=w.typed;
+  drawHistory=[];
+  resizeCanvas(false);
+  restoreSnapshot(w.drawn);
+}
+window.addEventListener("resize",()=>{ if(document.getElementById("drawPane").classList.contains("active")) resizeCanvas(true); });
+
+function returnToCurrent(){
+  reviewing=null;
+  showStation(current,false);
+}
+
+function answerBank(){
+  const bank=Object.values(stations).map(s=>({expr:s.answer,target:s.next,id:s.id}));
+  // Shuffle for a true scavenger-hunt feel.
+  for(let i=bank.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[bank[i],bank[j]]=[bank[j],bank[i]]}
+  const grid=document.getElementById("answerGrid");
+  grid.innerHTML="";
+  bank.forEach(item=>{
+    const b=document.createElement("button");
+    b.className="answer";
+    setMath(b, item.expr, false);
+    b.dataset.next=item.target;
+    b.addEventListener("click",()=>checkAnswer(item,b));
+    grid.appendChild(b);
+  });
+  renderMath(grid);
+}
+
+function showStation(n, isReview=false){
+  if(typeof current !== "undefined" && current !== n && !reviewing) saveWorkspace(current);
+  const s=stations[n];
+  document.getElementById("stationNumber").textContent=n;
+  setMath(document.getElementById("problemEquation"), s.problem, true);
+  document.getElementById("problemTitle").textContent=isReview ? "Review this station" : "Find the derivative.";
+  document.getElementById("stationDirections").textContent=isReview
+    ? "Review your work and reasoning. You can reveal the correct derivative below, then return to your current station."
+    : "Show your work in the math workspace below. When you have your answer, find the matching answer card on the right.";
+  document.getElementById("feedback").className="feedback";
+  document.getElementById("feedback").textContent="";
+  document.getElementById("hintBox").className="hint-box";
+  document.getElementById("hintBox").innerHTML="";
+  document.getElementById("reviewAnswer").className="review-answer";
+  document.getElementById("reviewAnswer").innerHTML="";
+  loadWorkspace(n);
+  document.getElementById("reviewBar").classList.toggle("show",isReview);
+  document.getElementById("hintBtn").style.display=isReview?"none":"inline-block";
+  document.getElementById("extraBtn").style.display=isReview?"none":"inline-block";
+  document.getElementById("clearWork").style.display="inline-block";
+  document.querySelector(".answers-panel").style.display=isReview?"none":"block";
+  tries=0;
+  if(!isReview) answerBank();
+  buildTrail();
+  renderMath(document.getElementById("problemCard"));
+}
+
+function loadStation(){ showStation(current,false); }
+
+function checkAnswer(item,button){
+  if(reviewing) return;
+  if(item.target!==current+1 && !(current===18 && item.target===1)){
+    button.classList.add("wrong");
+    setTimeout(()=>button.classList.remove("wrong"),300);
+    tries++;
+    document.getElementById("feedback").className="feedback bad";
+    document.getElementById("feedback").innerHTML="Not this one. Check your derivative again. <strong>Keep hunting!</strong>";
+    return;
+  }
+  button.classList.add("correct");
+  if(tries===0) firstTry.add(current);
+  completed.add(current);
+  saveWorkspace(current);
+  saveState();
+  confetti();
+  document.getElementById("feedback").className="feedback good";
+  document.getElementById("feedback").innerHTML=current===18
+    ? "🎉 You found the starting station again! The circuit is complete."
+    : "🎉 Correct! You found the next station.";
+  setTimeout(()=>{
+    if(current===18) finish();
+    else {current=stations[current].next;loadStation();}
+  },850);
+}
+
+function finish(){
+  document.getElementById("problemCard").style.display="none";
+  document.querySelector(".answers-panel").style.display="none";
+  document.getElementById("finishCard").style.display="block";
+  document.getElementById("finishStats").textContent=
+    `${firstTry.size}/18 stations correct on the first try • ${practiceCount} extra-practice sets completed`;
+  buildTrail();
+}
+
+function confetti(){
+  const pieces=[];
+  for(let i=0;i<90;i++){
+    const d=document.createElement("div");
+    d.style.position="fixed"; d.style.left=(45+Math.random()*10)+"vw"; d.style.top="-12px";
+    d.style.width="8px"; d.style.height="12px"; d.style.background=`hsl(${Math.random()*360},85%,60%)`;
+    d.style.transform=`rotate(${Math.random()*360}deg)`; d.style.zIndex=9999;
+    d.style.pointerEvents="none"; document.body.appendChild(d); pieces.push(d);
+    const x=(Math.random()-0.5)*600, dur=900+Math.random()*1000;
+    d.animate([{transform:"translate(0,0) rotate(0deg)",opacity:1},
+               {transform:`translate(${x}px,${window.innerHeight+40}px) rotate(${720+Math.random()*720}deg)`,opacity:0}],
+              {duration:dur,easing:"cubic-bezier(.2,.8,.2,1)"});
+    setTimeout(()=>d.remove(),dur+50);
+  }
+}
+
+function openPractice(){
+  const s=stations[current];
+  document.getElementById("practiceTitle").textContent=`Extra Practice • ${s.skill}`;
+  const list=document.getElementById("practiceList");
+  list.innerHTML="";
+  (practice[s.skill]||[]).forEach((p,i)=>{
+    const card=document.createElement("div");card.className="practice-card";
+    card.innerHTML=`<strong>Practice ${i+1}</strong><div class="practice-equation" style="font-size:1.15rem;margin:14px 0"></div>
+      <button class="secondary reveal">Show answer</button>
+      <div class="practice-answer"></div>`;
+    setMath(card.querySelector(".practice-equation"), p[0], true);
+    setMath(card.querySelector(".practice-answer"), "Answer: " + p[1], false);
+    card.querySelector(".reveal").addEventListener("click",e=>{
+      e.currentTarget.nextElementSibling.classList.add("show");
+      renderMath(card);
+    });
+    list.appendChild(card);
+  });
+  practiceCount++;
+  buildTrail();
+  document.getElementById("practiceDialog").showModal();
+  renderMath(list);
+}
+
+document.getElementById("hintBtn").addEventListener("click",()=>{
+  const box=document.getElementById("hintBox");
+  box.innerHTML=`<strong>💡 Hint:</strong> ${hints[current] || "Think about the outermost function first, then work inward using the chain rule."}`;
+  box.classList.toggle("show");
+});
+
+document.getElementById("returnCurrent").addEventListener("click",returnToCurrent);
+document.getElementById("extraBtn").addEventListener("click",openPractice);
+document.getElementById("closePractice").addEventListener("click",()=>document.getElementById("practiceDialog").close());
+document.getElementById("clearWork").addEventListener("click",()=>{
+  document.getElementById("mathWork").value="";
+  document.getElementById("mathWorkFallback").value="";
+  saveDrawSnapshot();
+  ctx.clearRect(0,0,canvas.clientWidth,canvas.clientHeight);
+  saveCurrentWorkspaceSoon();
+});
+document.getElementById("restartBtn").addEventListener("click",()=>{
+  clearSavedState();
+  current=1;completed.clear();firstTry.clear();practiceCount=0;reviewing=null;
+  Object.keys(workspaceByStation).forEach(k=>delete workspaceByStation[k]);
+  document.getElementById("finishCard").style.display="none";
+  document.getElementById("problemCard").style.display="block";
+  document.querySelector(".answers-panel").style.display="block";
+  loadStation();
+});
+document.getElementById("bonusBtn").addEventListener("click",()=>{
+  document.getElementById("practiceDialog").showModal();
+  const list=document.getElementById("practiceList");
+  document.getElementById("practiceTitle").textContent="Bonus Stations";
+  list.innerHTML="";
+  bonusStations.forEach((b,i)=>{
+    const card=document.createElement("div");card.className="practice-card";
+    card.innerHTML=`<strong>${b.title}</strong><div class="practice-equation" style="font-size:1.15rem;margin:14px 0"></div>
+      <button class="secondary reveal">Reveal answer</button>
+      <div class="practice-answer"></div>`;
+    setMath(card.querySelector(".practice-equation"), b.problem, true);
+    setMath(card.querySelector(".practice-answer"), "Answer: " + b.answer, false);
+    card.querySelector(".reveal").addEventListener("click",e=>{
+      e.currentTarget.nextElementSibling.classList.add("show");renderMath(card);
+    });
+    list.appendChild(card);
+  });
+  renderMath(list);
+});
+
+window.addEventListener("load", async () => {
+  if (window.MathJax && MathJax.startup && MathJax.startup.promise) {
+    try { await MathJax.startup.promise; } catch (e) { console.warn("MathJax startup:", e); }
+  }
+  const restored=loadSavedState();
+  loadStation();
+  if(restored){
+    updateSaveStatus("✓ Progress restored");
+  }
+});
+</script>
+</body>
+</html>
